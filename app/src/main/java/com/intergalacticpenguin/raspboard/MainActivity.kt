@@ -6,7 +6,6 @@ import android.util.DisplayMetrics
 import android.util.Log
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.card_article.*
@@ -40,39 +39,52 @@ class MainActivity : Activity() {
     val newsService by lazy {
         NewsService.create()
     }
-    var disposable: Disposable? = null
-    val dateFormat = SimpleDateFormat("dd. MM. yyyy hh:mm:ss")
+    val metrics = DisplayMetrics()
+    val dateFormat = SimpleDateFormat("dd. MM. yyyy hh:mm:ss", Locale.getDefault())
     val debugTextList = ArrayList<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // display resolution
-        val metrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(metrics)
-        debugTextList.add(metrics.widthPixels.toString()+"x"+metrics.heightPixels.toString())
+        world_news_recycler.layoutManager = AutofitGridLayoutManager(this, 340)
+        tech_news_recycler.layoutManager = AutofitGridLayoutManager(this, 340)
 
         setupDebugText()
         getNews()
     }
 
-    private fun getNews(): Disposable {
-        return newsService.getNews("bbc-news", "top", API_KEY)
+    private fun getNews() { //TODO check periodically
+        newsService.getNews("bbc-news", "top", API_KEY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        { result -> showCard(result.articles.get(0).title, result.articles.get(0).description) },
+                        { result -> world_news_recycler.adapter = ArticleAdapter(this, result.articles) },
+                        { error -> Log.e("Error", error.message) }
+                )
+        newsService.getNews("engadget", "latest", API_KEY)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        { result -> tech_news_recycler.adapter = ArticleAdapter(this, result.articles) },
                         { error -> Log.e("Error", error.message) }
                 )
     }
 
     override fun onPause() {
         super.onPause()
-        disposable?.dispose()
+        //disposable?.dispose() TODO should do with all disposables
     }
 
     fun setupDebugText() {
+        // display resolution
+        windowManager.defaultDisplay.getMetrics(metrics)
+        debugTextList.add(metrics.widthPixels.toString() + "x" + metrics.heightPixels.toString())
+
+        // display ip
+        debugTextList.add(getDeviceIp(this))
+
+        // run observable for updating debug text
         Observable
                 .interval(1L, TimeUnit.SECONDS)
                 .timeInterval()
@@ -81,11 +93,11 @@ class MainActivity : Activity() {
                 .subscribe({ updateDebugText(debugTextList) })
     }
 
-    fun updateDebugText(debugTextList: List<String>) {
+    fun updateDebugText(debugTextList: ArrayList<String>) {
         var debugText = StringBuilder()
         debugText.append(dateFormat.format(Date()))
         for (string: String in debugTextList) {
-            debugText.append(" "+string)
+            debugText.append(" " + string)
         }
         debug_text.setText(debugText.toString())
     }
