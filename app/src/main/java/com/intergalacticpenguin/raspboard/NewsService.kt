@@ -27,7 +27,7 @@ interface NewsService {
         fun create(): NewsService {
             val okhttpClient = OkHttpClient.Builder()
             val loggingInterceptor = HttpLoggingInterceptor()
-            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC)
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
 
             val retrofit = Retrofit.Builder()
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())

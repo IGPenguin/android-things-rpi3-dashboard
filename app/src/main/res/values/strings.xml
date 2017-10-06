@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Raspboard</string>
+	<string name="world_news_title">World News</string>
+	<string name="tech_news_title">Tech News</string>
 </resources>

@@ -17,5 +17,5 @@ data class ResultArticle (
         val status:String,
         val source:String,
         val sortBy:String,
-        val articles:List<Article>
+        val articles:ArrayList<Article>
 )
